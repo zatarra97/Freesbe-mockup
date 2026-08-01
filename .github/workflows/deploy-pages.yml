@@ -1,0 +1,44 @@
+name: Deploy mockup su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permessi richiesti dal deploy ufficiale di Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un solo deploy alla volta; i push successivi annullano quello in coda
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepara il sito
+        run: |
+          # Pages cerca index.html nella radice: il mockup ha un nome con spazi,
+          # quindi ne pubblichiamo una copia. Il file sorgente resta invariato.
+          cp "La Tessera - App.dc.html" index.html
+          # Senza .nojekyll, Jekyll scarterebbe _ds/ e i file che iniziano per punto
+          # (il design system e .image-slots.state.json con le foto dei locali).
+          touch .nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

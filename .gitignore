@@ -1,0 +1,11 @@
+# File di sistema
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Anteprima generata da Claude Design
+.thumbnail
+
+# Generato dal workflow di deploy, non va versionato
+/index.html
+/.nojekyll

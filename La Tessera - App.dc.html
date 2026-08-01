@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- offline-boot.js serve solo al doppio clic (file://), dove il browser blocca
+     fetch() sui file locali: pesa ~380 KB, quindi online non va nemmeno scaricato.
+     document.write tiene il caricamento sincrono, prima di support.js. -->
+<script>if(location.protocol==='file:')document.write('<scr'+'ipt src="./offline-boot.js"><\/scr'+'ipt>');</script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<link rel="stylesheet" href="_ds/broadsheet-b9f163f8-181a-45dc-846e-c3c5c4181d6d/styles.css">
+<script src="_ds/broadsheet-b9f163f8-181a-45dc-846e-c3c5c4181d6d/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#e4e2df}
+a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
+.scr::-webkit-scrollbar{width:0}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* Desktop: la scocca del telefono, centrata sul "tavolo" grigio. */
+.stage{min-height:100vh;box-sizing:border-box;display:flex;align-items:center;
+  justify-content:center;padding:48px 32px;font-family:var(--font-body)}
+
+/* Telefono vero: niente scocca, l'app occupa tutta la finestra.
+   Stessa soglia usata da IOSDevice in ios-frame.jsx — se cambi una, cambia l'altra. */
+@media (max-width:700px){
+  body{background:var(--color-bg)}
+  .stage{display:block;min-height:100dvh;padding:0}
+}
+</style>
+
+<div class="stage">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+
+<sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:var(--color-bg);display:flex;flex-direction:column;padding:0 26px;justify-content:center">
+  <div style="position:absolute;top:54px;left:26px;right:26px">
+    <div style="height:4px;background:var(--color-text)"></div>
+    
+    <div style="height:1px;background:var(--color-text)"></div>
+  </div>
+
+  <div style="margin-top:-28px">
+    <div style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:.95;letter-spacing:-.02em">{{ authTitle }}</div>
+    <p style="font-size:14px;line-height:1.5;margin:12px 0 26px;max-width:34ch;color:color-mix(in srgb,var(--color-text) 68%,transparent)">{{ authSub }}</p>
+
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field">
+        <label for="li-mail">Email</label>
+        <input class="input" id="li-mail" type="email" placeholder="nome@email.it" value="{{ f.email }}" onChange="{{ set.email }}" style="min-height:46px;font-size:15px">
+      </div>
+      <div class="field">
+        <label for="li-pw">Password</label>
+        <input class="input" id="li-pw" type="password" placeholder="••••••••" value="{{ f.pw }}" onChange="{{ set.pw }}" style="min-height:46px;font-size:15px">
+      </div>
+      <button class="btn btn-primary btn-block" onClick="{{ doLogin }}" style="min-height:50px;font-size:16px;margin-top:6px">Accedi</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+        <a href="#" onClick="{{ noop }}">Password dimenticata</a>
+        <button class="btn btn-ghost" onClick="{{ goRegister }}" style="font-size:13px">Crea un account →</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label for="r-nome">Nome</label><input class="input" id="r-nome" value="{{ f.nome }}" onChange="{{ set.nome }}" style="min-height:44px"></div>
+        <div class="field"><label for="r-cog">Cognome</label><input class="input" id="r-cog" value="{{ f.cognome }}" onChange="{{ set.cognome }}" style="min-height:44px"></div>
+      </div>
+      <div class="field"><label for="r-tel">Numero di telefono</label><input class="input" id="r-tel" type="tel" placeholder="+39" value="{{ f.tel }}" onChange="{{ set.tel }}" style="min-height:44px"></div>
+      <div class="field"><label for="r-mail">Email</label><input class="input" id="r-mail" type="email" placeholder="nome@email.it" value="{{ f.email }}" onChange="{{ set.email }}" style="min-height:44px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label for="r-pw">Password</label><input class="input" id="r-pw" type="password" value="{{ f.pw }}" onChange="{{ set.pw }}" style="min-height:44px"></div>
+        <div class="field"><label for="r-pw2">Conferma</label><input class="input" id="r-pw2" type="password" value="{{ f.pw2 }}" onChange="{{ set.pw2 }}" style="min-height:44px"></div>
+      </div>
+      <div class="field"><label for="r-inv">Codice invito <span style="opacity:.6">(facoltativo)</span></label><input class="input" id="r-inv" placeholder="es. FRSB-0413" value="{{ f.invito }}" onChange="{{ set.invito }}" style="min-height:44px;text-transform:uppercase"></div>
+      <sc-if value="{{ regError }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12px;color:var(--color-accent-2-700)">{{ regError }}</div>
+      </sc-if>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <label class="radio" style="align-items:flex-start;font-size:12.5px;line-height:1.45;min-height:44px">
+          <input type="checkbox" checked="{{ f.terms }}" onChange="{{ set.terms }}">
+          <span class="dot" style="border-radius:var(--radius-md);width:20px;height:20px;margin-top:2px"></span>
+          <span>Ho preso visione dei <a href="#" onClick="{{ noop }}">Termini e Condizioni</a></span>
+        </label>
+        <label class="radio" style="align-items:flex-start;font-size:12.5px;line-height:1.45;min-height:44px">
+          <input type="checkbox" checked="{{ f.privacy }}" onChange="{{ set.privacy }}">
+          <span class="dot" style="border-radius:var(--radius-md);width:20px;height:20px;margin-top:2px"></span>
+          <span>Ho letto l'<a href="#" onClick="{{ noop }}">Informativa privacy</a></span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-block" onClick="{{ doRegister }}" style="min-height:50px;font-size:16px;margin-top:6px">Crea account</button>
+      <button class="btn btn-ghost" onClick="{{ goLogin }}" style="font-size:13px;align-self:flex-start">← Ho già un account</button>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+<div class="scr" onScroll="{{ onScroll }}" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+
+  <section style="padding:58px 22px 20px;min-height:218px;display:flex;flex-direction:column;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
+      
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px">Punti raccolti</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:62px;line-height:.9;letter-spacing:-.03em">{{ points }}</div>
+      </div>
+      <div style="text-align:right;padding-bottom:6px">
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent);margin-bottom:5px">Status</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-text);padding:4px 9px;font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.1em">
+          <i class="ph-duotone ph-medal" style="font-size:15px"></i>{{ status }}
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin-bottom:5px">
+        <span>Wave in corso · chiude il {{ waveEnd }}</span><button onClick="{{ goPunti }}" style="all:unset;cursor:pointer;font-size:11px;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">vai al dettaglio</button>
+      </div>
+      <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+        <div style="{{ waveFill }}"></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="padding:4px 22px 14px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="flex:1;display:flex;align-items:center;gap:9px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:0 12px;min-height:46px">
+        <i class="ph-duotone ph-magnifying-glass" style="font-size:18px;color:var(--color-accent-700)"></i>
+        <input class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:44px">
+      </div>
+      <button class="btn btn-icon" onClick="{{ toggleFilters }}" style="{{ filterBtnStyle }}">
+        <i class="ph-duotone ph-sliders-horizontal" style="font-size:19px"></i>
+      </button>
+    </div>
+    <sc-if value="{{ filtersOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid var(--color-divider);padding:14px;margin-top:10px;animation:riseIn .16s ease-out">
+        <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Categoria</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px">
+          <sc-for list="{{ filterCats }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent);margin-top:16px">Distanza</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px">
+          <sc-for list="{{ filterDist }}" as="d" hint-placeholder-count="3">
+            <button onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:14px">
+          <label class="radio" style="min-height:44px">
+            <input type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
+            <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
+            <span style="font-size:13.5px">Aperti ora</span>
+          </label>
+          <label class="radio" style="min-height:44px">
+            <input type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
+            <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
+            <span style="font-size:13.5px">Solo dove sto raccogliendo</span>
+          </label>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:12px">
+          <button class="btn btn-ghost" onClick="{{ resetFilters }}" style="font-size:13px">Azzera</button>
+          <button class="btn btn-primary" onClick="{{ toggleFilters }}" style="margin-left:auto;min-height:40px">Mostra {{ resultCount }} locali</button>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="padding:0 22px 22px">
+    <button onClick="{{ openMap }}" style="all:unset;cursor:pointer;display:block;width:100%;position:relative;height:101px;overflow:hidden;border:1px solid var(--color-divider);background:var(--color-surface)">
+      <svg viewBox="0 0 360 152" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+        <rect width="360" height="152" fill="#eae9e9"></rect>
+        <g stroke="#201e1d" stroke-opacity=".13" stroke-width="7">
+          <path d="M0 34H360M0 78H360M0 122H360M46 0V152M112 0V152M186 0V152M254 0V152M318 0V152"></path>
+        </g>
+        <path d="M-10 150L200-10" stroke="#201e1d" stroke-opacity=".2" stroke-width="11"></path>
+        <rect x="216" y="86" width="82" height="44" fill="#0088b0" fill-opacity=".1"></rect>
+        <g fill="none" stroke="#201e1d" stroke-opacity=".25" stroke-width="1.2">
+          <rect x="216.5" y="86.5" width="81" height="43"></rect>
+        </g>
+      </svg>
+      <div style="position:absolute;left:34%;top:38%"><i class="ph-duotone ph-map-pin" style="font-size:30px;color:var(--color-accent-2)"></i></div>
+      <div style="position:absolute;left:62%;top:24%"><i class="ph-duotone ph-map-pin" style="font-size:26px;color:var(--color-accent)"></i></div>
+      <div style="position:absolute;left:48%;top:64%"><i class="ph-duotone ph-map-pin" style="font-size:26px;color:var(--color-accent)"></i></div>
+      <div style="position:absolute;left:12px;bottom:10px;display:flex;align-items:center;gap:6px;background:var(--color-bg);padding:5px 10px;font-size:11px;letter-spacing:.04em">
+        <i class="ph-duotone ph-arrows-out" style="font-size:14px;color:var(--color-accent-700)"></i>18 locali qui intorno
+      </div>
+    </button>
+  </div>
+
+  <div style="padding:0 22px 120px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+      <h4 style="margin:0;font-size:19px">Locali vicini</h4>
+      <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Ordina per distanza</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ locali }}" as="loc" hint-placeholder-count="2">
+        <article onClick="{{ loc.open }}" style="display:flex;flex-direction:column;gap:9px;border:1px solid var(--color-divider);padding:12px;cursor:pointer">
+          <figure class="halftone" style="height:132px;position:relative">
+            <image-slot id="{{ loc.slot }}" shape="rect" placeholder="{{ loc.ph }}"></image-slot>
+          </figure>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;line-height:1.15">{{ loc.name }}</div>
+            <div style="font-size:11px;color:color-mix(in srgb,var(--color-text) 50%,transparent);white-space:nowrap">{{ loc.dist }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:color-mix(in srgb,var(--color-text) 65%,transparent)">
+            <i class="ph-duotone ph-clock" style="font-size:14px"></i><span>{{ loc.hours }}</span>
+            <span style="opacity:.4">·</span><span>{{ loc.kind }}</span>
+          </div>
+          <sc-if value="{{ loc.hasProgress }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:3px">
+              <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+                <div style="{{ loc.fill }}"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">
+                <span>{{ loc.progressLabel }}</span><span style="color:var(--color-accent-700)">{{ loc.reward }}</span>
+              </div>
+            </div>
+          </sc-if>
+        </article>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<sc-if value="{{ stuck }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:0;left:0;right:0;z-index:40;background:var(--color-bg);padding:52px 22px 11px;border-bottom:1px solid var(--color-text);animation:riseIn .18s ease-out">
+  <div style="display:flex;align-items:center;gap:9px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:0 12px;min-height:44px">
+    <i class="ph-duotone ph-magnifying-glass" style="font-size:18px;color:var(--color-accent-700)"></i>
+    <input class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
+    <button onClick="{{ openFilterModal }}" style="all:unset;cursor:pointer;display:grid;place-items:center;width:36px;height:36px;flex:none">
+      <i class="ph-duotone ph-sliders-horizontal" style="font-size:19px;color:var(--color-accent-700)"></i>
+    </button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ filterModal }}" hint-placeholder-val="{{ false }}">
+<div class="dialog-backdrop" onClick="{{ closeFilterModal }}" style="position:absolute;inset:0;z-index:70;align-items:flex-end;padding:0">
+  <div class="dialog" onClick="{{ stop }}" style="width:100%;border-radius:0;background:var(--color-bg);border-top:4px solid var(--color-text);padding:18px 22px 30px;animation:riseIn .18s ease-out">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="dialog-title" style="font-size:19px">Filtri</span>
+      <button class="btn btn-icon" onClick="{{ closeFilterModal }}" style="width:40px;height:40px">
+        <i class="ph-duotone ph-x" style="font-size:18px"></i>
+      </button>
+    </div>
+    <div>
+      <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Categoria</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px">
+        <sc-for list="{{ filterCats }}" as="c" hint-placeholder-count="4">
+          <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+        </sc-for>
+      </div>
+      <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent);margin-top:16px">Distanza</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px">
+        <sc-for list="{{ filterDist }}" as="d" hint-placeholder-count="3">
+          <button onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:12px">
+        <label class="radio" style="min-height:44px">
+          <input type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
+          <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
+          <span style="font-size:13.5px">Aperti ora</span>
+        </label>
+        <label class="radio" style="min-height:44px">
+          <input type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
+          <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
+          <span style="font-size:13.5px">Solo dove sto raccogliendo</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:9px;align-items:center;margin-top:12px">
+        <button class="btn btn-ghost" onClick="{{ resetFilters }}" style="font-size:13px">Azzera</button>
+        <button class="btn btn-primary" onClick="{{ closeFilterModal }}" style="margin-left:auto;min-height:44px">Mostra {{ resultCount }} locali</button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ isMissioni }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <section style="padding:52px 22px 0">
+    <button class="btn btn-icon" onClick="{{ backPunti }}" style="width:44px;height:44px;background:var(--color-bg);border:1px solid var(--color-text)">
+      <i class="ph-duotone ph-arrow-left" style="font-size:19px"></i>
+    </button>
+    <h4 style="margin:18px 0 0;font-size:30px;letter-spacing:-.02em;line-height:1.05">Missioni</h4>
+    <p style="font-size:13.5px;line-height:1.5;margin:10px 0 0;max-width:34ch;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Tutti i modi per fare punti durante la wave. Si sommano: più missioni completi, più veloce sali di status.</p>
+  </section>
+
+  <section style="padding:24px 22px 0;display:flex;flex-direction:column;gap:11px">
+    <sc-for list="{{ missioni }}" as="m" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:14px;border:1px solid var(--color-divider);padding:14px">
+        <i class="{{ m.icon }}" style="font-size:24px;color:var(--color-accent-700);flex:none"></i>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:15.5px;line-height:1.2">{{ m.name }}</div>
+          <div style="font-size:12.5px;line-height:1.45;margin-top:3px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">{{ m.desc }}</div>
+        </div>
+        <div style="text-align:right;flex:none">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:22px;line-height:1">{{ m.pts }}</div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:3px;color:color-mix(in srgb,var(--color-text) 50%,transparent)">punti</div>
+        </div>
+      </div>
+    </sc-for>
+    <p style="font-size:11.5px;margin:8px 0 130px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">I punti delle missioni valgono per la wave in corso e concorrono al tuo status.</p>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPunti }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <section style="padding: 58px 22px 20px; min-height: 218px; display: flex; flex-direction: column; justify-content: space-between; width: 401px; height: 175px">
+    
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px">Punti raccolti</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:62px;line-height:.9;letter-spacing:-.03em">{{ points }}</div>
+      </div>
+      <div style="text-align:right;padding-bottom:6px">
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent);margin-bottom:5px">Status</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-text);padding:4px 9px;font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.1em">
+          <i class="ph-duotone ph-medal" style="font-size:15px"></i>{{ status }}
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin-bottom:5px">
+        <span>Chiude il {{ waveEnd }}</span><span>{{ waveDays }} giorni</span>
+      </div>
+      <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+        <div style="{{ waveFill }}"></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding: 18px 22px 0; width: 401px; height: 67px">
+    <div style="border:1px solid var(--color-divider);padding:9px 10px 9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Il tuo codice invito</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;letter-spacing:.06em;margin-top:1px">{{ inviteCode }}</div>
+      </div>
+      <button class="btn btn-secondary" onClick="{{ copyInvite }}" style="gap:6px;min-height:36px;font-size:13px;flex:none">
+        <i class="{{ copyIcon }}" style="font-size:15px;color:var(--color-accent-700)"></i>{{ copyLabel }}
+      </button>
+    </div>
+  </section>
+
+  <section style="padding:22px 22px 0">
+    
+    <div style="display:flex;justify-content:center;align-items:baseline;padding:6px 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-text)">
+      <span style="font-size: 14px; font-weight: 700">Come funziona</span>
+    </div>
+    <div style="height:1px;background:var(--color-text)"></div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;padding:18px 0 0">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1;min-width:30px;color:var(--color-accent-700)">1</div>
+        <div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:15.5px">Raccogli punti durante il periodo del concorso a premi</div>
+          <div style="font-size:13px;line-height:1.5;margin-top:3px;color:color-mix(in srgb,var(--color-text) 65%,transparent)">Guadagna timbri nei locali aderenti, invitando un amico o invitando un locale: ogni gesto vale punti.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1;min-width:30px;color:var(--color-accent-700)">2</div>
+        <div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:15.5px">I punti definiscono lo status</div>
+          <div style="font-size:13px;line-height:1.5;margin-top:3px;color:color-mix(in srgb,var(--color-text) 65%,transparent)">Accumulando punti migliorerai il tuo status.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1;min-width:30px;color:var(--color-accent-700)">3</div>
+        <div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:15.5px">Alla chiusura si assegnano i premi</div>
+          <div style="font-size:13px;line-height:1.5;margin-top:3px;color:color-mix(in srgb,var(--color-text) 65%,transparent)">Cinque premi in palio, divisi tra Argento e Oro.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:11px;margin-top:20px">
+      <div style="flex:1;border:1px solid var(--color-divider);padding:14px">
+        <div style="font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb,var(--color-text) 50%,transparent); font-weight: 700">Status Argento</div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-top:6px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1">3</span>
+          <span style="font-size:12px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">vincitori</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:9px">
+          <i class="ph-duotone ph-gift" style="font-size:17px;color:var(--color-accent-700)"></i>
+          <span style="font-size:13.5px;line-height:1.3">Buono Amazon 20 €</span>
+        </div>
+      </div>
+      <div style="flex:1;border:1px solid var(--color-divider);padding:14px">
+        <div style="font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb,var(--color-text) 50%,transparent); font-weight: 700">Status Oro</div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-top:6px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1">2</span>
+          <span style="font-size:12px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">vincitori</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:9px">
+          <i class="ph-duotone ph-airplane-tilt" style="font-size:17px;color:var(--color-accent-700)"></i>
+          <span style="font-size:13.5px;line-height:1.3">Buono Ryanair 50 €</span>
+        </div>
+      </div>
+    </div>
+    <div style="border:1px solid var(--color-accent-2);padding:14px;margin-top:11px;display:flex;gap:13px;align-items:flex-start">
+      <i class="ph-duotone ph-ticket" style="font-size:24px;color:var(--color-accent-2-700);flex:none"></i>
+      <div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15.5px;line-height:1.2">Timbri Wonka</div>
+        <div style="font-size:12.5px;line-height:1.5;margin-top:4px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">A inizio wave abbiamo nascosto dei timbri speciali nei locali: ogni timbro che guadagni può rivelarsi un Wonka. Chi lo trova riceve 10 € da usare su Just Eat.</div>
+      </div>
+    </div>
+    <p style="font-size:11.5px;margin:12px 0 0;color:color-mix(in srgb,var(--color-text) 55%,transparent)">I premi si assegnano alla chiusura della wave, il {{ waveEnd }}.</p>
+
+    <button onClick="{{ openMissioni }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:22px 0 11px;padding:16px;border:1px solid var(--color-divider);min-height:44px">
+      <i class="ph-duotone ph-target" style="font-size:26px;color:var(--color-accent-700);flex:none"></i>
+      <span style="flex:1;font-family:var(--font-heading);font-weight:600;font-size:15.5px;line-height:1.25">Scopri come accumulare punti con le missioni in app</span>
+      <i class="ph-duotone ph-arrow-right" style="font-size:18px;flex:none"></i>
+    </button>
+
+    <button onClick="{{ noop }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:0 0 130px;padding:16px;border:1px solid var(--color-divider);min-height:44px">
+      <i class="ph-duotone ph-file-text" style="font-size:26px;color:var(--color-accent-700);flex:none"></i>
+      <span style="flex:1;font-family:var(--font-heading);font-weight:600;font-size:15.5px;line-height:1.25">Scarica regolamento wave</span>
+      <i class="ph-duotone ph-download-simple" style="font-size:18px;flex:none"></i>
+    </button>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCampagne }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <section style="padding:58px 22px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
+      
+    </div>
+    <h4 style="margin: 16px 0 0; font-size: 26px; letter-spacing: -.02em; text-align: center">Timbri raccolti</h4>
+    <p style="font-size:13.5px;line-height:1.5;margin:10px 0 0;text-align:center;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Colleziona timbri nei vari locali, fai attenzione alle scadenze imposte da ciascun catalogo per guadagnare il timbro e richiedere premi fantastici.</p>
+  </section>
+
+  <section style="padding:26px 22px 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+      <h5 style="margin:0;font-size:17px">Raccolte attive</h5>
+      <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">{{ activeCount }} in corso</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ campActive }}" as="loc" hint-placeholder-count="2">
+        <article onClick="{{ loc.open }}" style="display:flex;flex-direction:column;gap:9px;border:1px solid var(--color-divider);padding:12px;cursor:pointer">
+          <figure class="halftone" style="height:132px;position:relative">
+            <image-slot id="{{ loc.slot }}" shape="rect" placeholder="{{ loc.ph }}"></image-slot>
+          </figure>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;line-height:1.15">{{ loc.name }}</div>
+            <div style="font-size:11px;color:color-mix(in srgb,var(--color-text) 50%,transparent);white-space:nowrap">{{ loc.kind }}</div>
+          </div>
+          <div>
+            <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+              <div style="{{ loc.fill }}"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">
+              <span>{{ loc.progressLabel }}</span><span style="color:var(--color-accent-700)">{{ loc.reward }}</span>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:32px 22px 130px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+      <h5 style="margin:0;font-size:17px">Raccolte terminate</h5>
+      
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ campEnded }}" as="loc" hint-placeholder-count="2">
+        <article style="display:flex;flex-direction:column;gap:9px;border:1px solid var(--color-divider);padding:12px">
+          <figure class="halftone" style="height:132px;position:relative;filter:grayscale(1) contrast(1.05);opacity:.72">
+            <image-slot id="{{ loc.slot }}" shape="rect" placeholder="{{ loc.ph }}"></image-slot>
+          </figure>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;line-height:1.15;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ loc.name }}</div>
+            <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid color-mix(in srgb,var(--color-text) 40%,transparent);padding:2px 7px;color:color-mix(in srgb,var(--color-text) 60%,transparent);white-space:nowrap">Terminata</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">
+            <span>{{ loc.endedOn }}</span><span style="opacity:.4">·</span><span>{{ loc.kind }}</span>
+          </div>
+          <div>
+            <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+              <div style="{{ loc.fill }}"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">
+              <span>{{ loc.progressLabel }}</span><span>{{ loc.outcome }}</span>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLocale }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <figure class="halftone" style="height:236px;position:relative">
+    <image-slot id="{{ det.slot }}" shape="rect" placeholder="{{ det.ph }}"></image-slot>
+  </figure>
+
+  <button class="btn btn-icon" onClick="{{ backHome }}" style="position:absolute;top:52px;left:18px;width:44px;height:44px;background:var(--color-bg);border:1px solid var(--color-text);z-index:10">
+    <i class="ph-duotone ph-arrow-left" style="font-size:19px"></i>
+  </button>
+
+  <section style="padding:18px 22px 0">
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">{{ det.kind }}</div>
+    <h4 style="margin:6px 0 0;font-size:30px;letter-spacing:-.02em;line-height:1.05">{{ det.name }}</h4>
+  </section>
+
+  <section style="padding:20px 22px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <i class="ph-duotone ph-map-pin" style="font-size:18px;color:var(--color-accent-700);margin-top:1px"></i>
+      <div>
+        <div style="font-size:14.5px">{{ det.address }}</div>
+        
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <i class="ph-duotone ph-phone" style="font-size:18px;color:var(--color-accent-700)"></i>
+      <a href="#" onClick="{{ noop }}" style="font-size:14.5px">{{ det.phone }}</a>
+    </div>
+
+    <div>
+      <button onClick="{{ toggleHours }}" style="all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;min-height:44px">
+        <i class="ph-duotone ph-clock" style="font-size:18px;color:var(--color-accent-700)"></i>
+        <span style="font-size:14.5px">Oggi {{ det.hours }}</span>
+        <span style="{{ det.stateStyle }}">{{ det.stateLabel }}</span>
+        <i class="{{ chevron }}" style="font-size:16px;margin-left:auto;color:color-mix(in srgb,var(--color-text) 55%,transparent)"></i>
+      </button>
+      <sc-if value="{{ hoursOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:6px 0 2px 28px;display:flex;flex-direction:column;gap:7px;animation:riseIn .16s ease-out">
+          <sc-for list="{{ det.week }}" as="d" hint-placeholder-count="7">
+            <div style="{{ d.rowStyle }}">
+              <span>{{ d.day }}</span><span>{{ d.hours }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <sc-if value="{{ det.hasProgress }}" hint-placeholder-val="{{ true }}">
+  <section style="padding:30px 22px 0">
+    <h5 style="margin:0 0 10px;font-size:16px">La tua raccolta</h5>
+    <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+      <div style="{{ det.fill }}"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-top:6px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">
+      <span>{{ det.stampLabel }}</span><span>Scade il {{ det.deadline }}</span>
+    </div>
+  </section>
+  </sc-if>
+
+  <section style="padding:26px 22px 0">
+    <h5 style="margin:0 0 12px;font-size:16px">Premi disponibili</h5>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ det.rewards }}" as="rw" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:14px;border:1px solid var(--color-divider);padding:12px 14px">
+          <div style="text-align:center;flex:none;min-width:44px">
+            <div style="{{ rw.numStyle }}">{{ rw.cost }}</div>
+            <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:3px;color:color-mix(in srgb,var(--color-text) 50%,transparent)">timbri</div>
+          </div>
+          <div style="width:1px;align-self:stretch;background:var(--color-divider)"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14.5px;line-height:1.25">{{ rw.name }}</div>
+            <div style="font-size:11.5px;margin-top:2px;color:{{ rw.noteColor }}">{{ rw.note }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:28px 22px 0">
+    <h5 style="margin:0 0 8px;font-size:16px">Il locale</h5>
+    <p style="font-size:14px;line-height:1.6;margin:0;color:color-mix(in srgb,var(--color-text) 78%,transparent)">{{ det.about }}</p>
+  </section>
+
+  <section style="padding:20px 22px 24px;display:flex;gap:9px;flex-wrap:wrap">
+    <a href="#" onClick="{{ noop }}" class="btn btn-secondary" style="gap:8px;min-height:44px">
+      <i class="ph-duotone ph-instagram-logo" style="font-size:18px;color:var(--color-accent-700)"></i>{{ det.ig }}
+    </a>
+    <a href="#" onClick="{{ noop }}" class="btn btn-secondary" style="gap:8px;min-height:44px">
+      <i class="ph-duotone ph-facebook-logo" style="font-size:18px;color:var(--color-accent-700)"></i>{{ det.fb }}
+    </a>
+    <a href="#" onClick="{{ noop }}" class="btn btn-secondary" style="gap:8px;min-height:44px">
+      <i class="ph-duotone ph-globe" style="font-size:18px;color:var(--color-accent-700)"></i>Sito
+    </a>
+  </section>
+
+  <sc-if value="{{ det.hasProgress }}" hint-placeholder-val="{{ true }}">
+  <section style="padding:8px 22px 130px">
+    <h5 style="margin:0 0 8px;font-size:16px">Storico timbri</h5>
+    <table class="table">
+      <thead><tr><th>Data</th><th style="text-align:right">Guadagnati</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ det.visits }}" as="v" hint-placeholder-count="3">
+          <tr>
+            <td>{{ v.date }}</td>
+            <td style="text-align:right;color:var(--color-accent-700)">{{ v.n }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-top:8px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">
+      
+    </div>
+  </section>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCarta }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <section style="padding:58px 22px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
+      
+    </div>
+    <h4 style="margin:16px 0 0;font-size:26px;letter-spacing:-.02em">Inquadra e raccogli</h4>
+    <p style="font-size: 13.5px; margin: 8px 0 0; max-width: 32ch; color: color-mix(in srgb,var(--color-text) 62%,transparent); width: 295px; height: 48px; position: relative">Mostra la tua card al locale e raccogli timbri per vincere premi.</p>
+  </section>
+
+  <section style="padding:24px 22px 0">
+    <div style="border:1px solid var(--color-text);background:var(--color-bg);box-shadow:var(--shadow-sm)">
+      <div style="padding:16px 18px 0">
+        
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; width: 323px; height: 54px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:.02em">Freesbe</span>
+          
+        </div>
+        <div style="height:1px;background:var(--color-text)"></div>
+      </div>
+
+      <div style="padding:22px 18px 18px;display:flex;justify-content:center">
+        <div style="padding:14px;background:#fff;border:1px solid var(--color-divider)">
+          <svg viewBox="0 0 29 29" shape-rendering="crispEdges" style="width:190px;height:190px;display:block">
+            <rect width="29" height="29" fill="#fff"></rect>
+            <path d="{{ qrPath }}" fill="#201e1d"></path>
+          </svg>
+        </div>
+      </div><div style="padding:0 18px 18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+        <div>
+          
+          <div style="font-size: 13.5px; margin-top: 3px; color: color-mix(in srgb,var(--color-text) 55%,transparent); width: 111px; height: 21px">Tessera n. 0413</div>
+          
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-text);padding:4px 9px;font-family:var(--font-heading);font-weight:600;font-size:12px;letter-spacing:.1em;flex:none">
+          <i class="ph-duotone ph-medal" style="font-size:14px"></i>{{ status }}
+        </div>
+      </div>
+
+      
+    </div>
+  </section>
+
+  <section style="padding:22px 22px 0">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin-bottom:5px">
+      <span>{{ points }} punti · wave chiude il {{ waveEnd }}</span><span>{{ waveDays }} giorni</span>
+    </div>
+    <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+      <div style="{{ waveFill }}"></div>
+    </div>
+  </section>
+
+  <section style="padding:20px 22px 130px;display:flex;flex-direction:column;gap:9px">
+    <button class="btn btn-secondary" onClick="{{ noop }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%">
+      <i class="ph-duotone ph-apple-logo" style="font-size:19px;color:var(--color-accent-700)"></i>Aggiungi a Apple Wallet
+    </button>
+    <button class="btn btn-secondary" onClick="{{ noop }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%">
+      <i class="ph-duotone ph-google-logo" style="font-size:19px;color:var(--color-accent-700)"></i>Aggiungi a Google Wallet
+    </button>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+<div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
+  <section style="padding: 82px 22px 0; width: 414px; height: 155px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
+      
+    </div><div style="display: flex; align-items: flex-end; gap: 16px; margin-top: 18px; width: 372px; height: 50px">
+      <figure class="halftone" style="width:96px;height:96px;flex:none;position:relative;border-radius:50%;overflow:hidden">
+        <image-slot id="avatar-socio" shape="circle" placeholder="Foto"></image-slot>
+      </figure>
+      <div style="padding-bottom:4px">
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:28px;line-height:1.02;letter-spacing:-.02em">{{ user.nome }}</div>
+        <div style="font-size:12px;margin-top:5px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Utente da {{ user.since }}</div>
+      </div>
+    </div>
+    
+  </section>
+
+  <section style="padding:26px 22px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:5px">Punti raccolti</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:.9;letter-spacing:-.03em">{{ points }}</div>
+      </div>
+      <div style="text-align:right;padding-bottom:5px">
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent);margin-bottom:5px">Status</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-text);padding:4px 9px;font-family:var(--font-heading);font-weight:600;font-size:13px;letter-spacing:.1em">
+          <i class="ph-duotone ph-medal" style="font-size:15px"></i>{{ status }}
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin-bottom:5px">
+        <span>Wave in corso · chiude il {{ waveEnd }}</span><button onClick="{{ goPunti }}" style="all:unset;cursor:pointer;font-size:11px;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">vai al dettaglio</button>
+      </div>
+      <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+        <div style="{{ waveFill }}"></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:26px 22px 0">
+    <div style="border:1px solid var(--color-divider);padding:9px 10px 9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Il tuo codice invito</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;letter-spacing:.06em;margin-top:1px">{{ inviteCode }}</div>
+      </div>
+      <button class="btn btn-secondary" onClick="{{ copyInvite }}" style="gap:6px;min-height:36px;font-size:13px;flex:none">
+        <i class="{{ copyIcon }}" style="font-size:15px;color:var(--color-accent-700)"></i>{{ copyLabel }}
+      </button>
+    </div>
+  </section>
+
+  <section style="padding:28px 22px 0">
+    <h4 style="margin:0 0 14px;font-size:19px">Dati anagrafici</h4>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Nome e cognome</div>
+        <div style="font-size:16px;margin-top:2px">{{ user.nome }}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Email</div>
+        <div style="font-size:16px;margin-top:2px">{{ user.email }}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Telefono</div>
+        <div style="font-size:16px;margin-top:2px">{{ user.tel }}</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:32px 22px 130px;display:flex;flex-direction:column;gap:10px">
+    <button class="btn btn-secondary" onClick="{{ noop }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%">
+      <i class="ph-duotone ph-key" style="font-size:19px;color:var(--color-accent-700)"></i>Cambia password
+    </button>
+    <button class="btn btn-secondary" onClick="{{ noop }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%">
+      <i class="ph-duotone ph-sliders-horizontal" style="font-size:19px;color:var(--color-accent-700)"></i>Impostazioni
+    </button>
+    <button class="btn btn-secondary" onClick="{{ noop }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%">
+      <i class="ph-duotone ph-lifebuoy" style="font-size:19px;color:var(--color-accent-700)"></i>Assistenza
+    </button>
+    <button class="btn" onClick="{{ doLogout }}" style="justify-content:flex-start;gap:10px;min-height:48px;width:100%;margin-top:8px;background:var(--color-text);color:var(--color-bg)" style-hover="background:var(--color-neutral-800)" style-active="background:var(--color-neutral-900)">
+      <i class="ph-duotone ph-sign-out" style="font-size:19px"></i>Esci
+    </button>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStub }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:var(--color-bg);display:flex;flex-direction:column;justify-content:center;padding:0 26px">
+  <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px">Prossima consegna</div>
+  <div style="font-family:var(--font-heading);font-weight:600;font-size:38px;line-height:1;letter-spacing:-.02em">{{ stubTitle }}</div>
+  <p style="font-size:14px;margin-top:12px;max-width:30ch;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Questa sezione arriva nel prossimo giro di design.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:var(--color-surface)">
+  <svg viewBox="0 0 402 874" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+    <rect width="402" height="874" fill="#eae9e9"></rect>
+    <g stroke="#201e1d" stroke-opacity=".12" stroke-width="9">
+      <path d="M0 120H402M0 236H402M0 352H402M0 468H402M0 584H402M0 700H402M0 812H402M52 0V874M148 0V874M244 0V874M330 0V874"></path>
+    </g>
+    <path d="M-20 830L420 190" stroke="#201e1d" stroke-opacity=".18" stroke-width="14"></path>
+    <path d="M0 60L402 300" stroke="#201e1d" stroke-opacity=".1" stroke-width="10"></path>
+    <rect x="148" y="468" width="96" height="116" fill="#0088b0" fill-opacity=".1" stroke="#201e1d" stroke-opacity=".22"></rect>
+    <rect x="244" y="120" width="86" height="116" fill="#d6006c" fill-opacity=".06"></rect>
+  </svg>
+
+  <sc-for list="{{ pins }}" as="pin" hint-placeholder-count="4">
+    <button onClick="{{ pin.select }}" style="{{ pin.style }}">
+      <i class="ph-duotone ph-map-pin" style="{{ pin.iconStyle }}"></i>
+    </button>
+  </sc-for>
+
+  <div style="position:absolute;top:52px;left:18px;right:18px;display:flex;gap:9px;align-items:center">
+    <button class="btn btn-icon" onClick="{{ closeMap }}" style="background:var(--color-bg);border:1px solid var(--color-text);width:44px;height:44px;flex:none">
+      <i class="ph-duotone ph-arrow-left" style="font-size:19px"></i>
+    </button>
+    <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--color-bg);border:1px solid var(--color-text);padding:0 12px;min-height:44px">
+      <i class="ph-duotone ph-magnifying-glass" style="font-size:17px;color:var(--color-accent-700)"></i>
+      <input class="input" placeholder="Cerca in mappa" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
+    </div>
+  </div>
+
+  <button class="btn btn-icon" onClick="{{ noop }}" style="position:absolute;right:18px;bottom:206px;width:46px;height:46px;background:var(--color-bg);border:1px solid var(--color-text)">
+    <i class="ph-duotone ph-crosshair" style="font-size:20px;color:var(--color-accent-700)"></i>
+  </button>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-bg);border-top:4px solid var(--color-text);padding:16px 22px 42px">
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <figure class="halftone" style="width:92px;height:74px;flex:none;position:relative">
+        <image-slot id="{{ sel.slot }}" shape="rect" placeholder="Foto"></image-slot>
+      </figure>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.1">{{ sel.name }}</div>
+          <span style="font-size:11px;color:color-mix(in srgb,var(--color-text) 50%,transparent)">{{ sel.dist }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;margin-top:4px;color:color-mix(in srgb,var(--color-text) 65%,transparent)">
+          <i class="ph-duotone ph-clock" style="font-size:14px"></i>{{ sel.hours }}<span style="opacity:.4">·</span>{{ sel.kind }}
+        </div>
+        <sc-if value="{{ sel.hasProgress }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:9px">
+            <div style="height:3px;background:color-mix(in srgb,var(--color-text) 14%,transparent)">
+              <div style="{{ sel.fill }}"></div>
+            </div>
+            <div style="font-size:11px;margin-top:5px;color:var(--color-accent-700)">{{ sel.progressLabel }} · {{ sel.reward }}</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:50;height:84px;background:var(--color-bg);border-top:1px solid var(--color-text)">
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);align-items:start;height:100%;padding-top:10px">
+    <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+      <button onClick="{{ tab.go }}" style="{{ tab.btnStyle }}">
+        <i class="{{ tab.icon }}" style="{{ tab.iconStyle }}"></i>
+        <span style="{{ tab.labelStyle }}">{{ tab.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+</x-import>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:500,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'login', tab: 'home', stuck: false, selected: 'gaia',
+    f: { email: '', pw: '', nome: '', cognome: '', tel: '', pw2: '', terms: false, privacy: false, q: '', invito: '' },
+    regError: '', detailId: 'gaia', hoursOpen: false
+  };
+
+  data() {
+    const wk = (h, closedDay) => ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
+      .map(d => ({ day: d, hours: d === closedDay ? 'Chiuso' : h, closed: d === closedDay }));
+    return [
+      { id: 'gaia', name: 'Bar Gaia', slot: 'loc-gaia', ph: 'Copertina Bar Gaia', hours: '07:00 – 20:30', kind: 'Caffetteria', dist: '240 m', progress: 66, progressLabel: '4 di 6 timbri', reward: 'Brioche in premio', x: 34, y: 46, accent: true,
+        open: true, address: 'Via Bramante 14, Milano', phone: '+39 02 4471 9902', week: wk('07:00 – 20:30', 'Domenica'),
+        stamps: 4, need: 6, deadline: '30 settembre',
+        rewards: [{ cost: 6, name: 'Brioche del mattino', need: 6 }, { cost: 10, name: 'Cappuccino + spremuta', need: 10 }, { cost: 18, name: 'Colazione per due', need: 18 }],
+        visits: [{ date: '28 luglio 2026', n: 1 }, { date: '21 luglio 2026', n: 1 }, { date: '14 luglio 2026', n: 2 }, { date: '2 luglio 2026', n: 1 }],
+        about: 'Caffetteria di quartiere aperta dal 1978. Tostiamo la nostra miscela ogni settimana e la brioche esce dal forno alle sei e mezza. Al banco si fa colazione in piedi, ai tavolini si legge il giornale.',
+        ig: '@bargaia', fb: 'Bar Gaia Milano' },
+      { id: 'nove', name: 'Osteria Nove', slot: 'loc-nove', ph: 'Copertina Osteria Nove', hours: '12:00 – 23:00', kind: 'Cucina', dist: '450 m', progress: null, x: 62, y: 26,
+        open: true, address: 'Corso Garibaldi 9, Milano', phone: '+39 02 3390 1188', week: wk('12:00 – 23:00', 'Lunedì'),
+        stamps: 0, need: 8, deadline: '30 settembre',
+        rewards: [{ cost: 8, name: 'Antipasto della casa', need: 8 }, { cost: 14, name: 'Primo del giorno', need: 14 }],
+        about: 'Cucina lombarda con menù scritto a mano ogni mattina. Nove coperti al banco, ventidue in sala. La carta dei vini è corta e tutta di produttori piccoli.',
+        ig: '@osterianove', fb: 'Osteria Nove' },
+      { id: 'sale', name: 'Panificio Sale', slot: 'loc-sale', ph: 'Copertina Panificio Sale', hours: '06:30 – 14:00', kind: 'Forno', dist: '610 m', progress: 25, progressLabel: '1 di 4 timbri', reward: 'Focaccia in premio', x: 22, y: 68,
+        open: true, address: 'Via Ponte Seveso 3, Milano', phone: '+39 02 6707 4410', week: wk('06:30 – 14:00', 'Domenica'),
+        stamps: 1, need: 4, deadline: '30 settembre',
+        rewards: [{ cost: 4, name: 'Focaccia intera', need: 4 }, { cost: 9, name: 'Pagnotta a lievitazione naturale', need: 9 }, { cost: 15, name: 'Cassetta di pane misto', need: 15 }],
+        visits: [{ date: '25 luglio 2026', n: 1 }],
+        about: 'Forno a lievito madre, tre impasti al giorno. Il pane esce alle sette, la focaccia a mezzogiorno. Farine macinate a pietra da un mulino a quaranta chilometri da qui.',
+        ig: '@panificiosale', fb: 'Panificio Sale' },
+      { id: 'terzo', name: 'Bar Terzo Tempo', slot: 'loc-terzo', ph: 'Copertina Terzo Tempo', hours: '17:00 – 02:00', kind: 'Cocktail', dist: '820 m', progress: null, x: 72, y: 62,
+        open: false, address: 'Via Melzo 21, Milano', phone: '+39 02 2951 7734', week: wk('17:00 – 02:00', 'Martedì'),
+        stamps: 0, need: 6, deadline: '30 settembre',
+        rewards: [{ cost: 6, name: 'Cocktail della casa', need: 6 }, { cost: 12, name: 'Tagliere e due calici', need: 12 }],
+        about: 'Cocktail bar con dieci sgabelli e un giradischi. Lista corta, ghiaccio intagliato a mano, nessuna prenotazione.',
+        ig: '@terzotempobar', fb: 'Terzo Tempo' }
+    ];
+  }
+
+  decorate(l) {
+    const muted = 'color-mix(in srgb, var(--color-text) 55%, transparent)';
+    return Object.assign({}, l, {
+      hasProgress: l.progress !== null,
+      fill: { height: '100%', width: (l.progress || 0) + '%', background: 'var(--color-accent)' },
+      open: () => this.setState({ screen: 'locale', detailId: l.id, hoursOpen: false }),
+      stampLabel: l.stamps + ' di ' + l.need + ' timbri raccolti',
+      visits: (l.visits || []).map(v => ({ date: v.date, n: '+' + v.n + (v.n === 1 ? ' timbro' : ' timbri') })),
+      stateLabel: l.open ? 'Aperto' : 'Chiuso',
+      stateStyle: {
+        fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase',
+        color: l.open ? 'var(--color-accent-700)' : muted
+      },
+      week: (l.week || []).map(d => ({
+        day: d.day, hours: d.hours,
+        rowStyle: {
+          display: 'flex', justifyContent: 'space-between', fontSize: 13,
+          color: d.closed ? muted : 'var(--color-text)',
+          fontStyle: d.closed ? 'italic' : 'normal'
+        }
+      })),
+      rewards: (l.rewards || []).map(r => {
+        const got = l.stamps >= r.need;
+        return {
+          cost: r.cost, name: r.name,
+          note: got ? 'Riscattabile ora' : 'Ti mancano ' + (r.need - l.stamps) + ' timbri',
+          noteColor: got ? 'var(--color-accent-700)' : muted,
+          numStyle: {
+            fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 22, lineHeight: 1,
+            minWidth: 34, color: got ? 'var(--color-accent-700)' : 'var(--color-text)'
+          }
+        };
+      })
+    });
+  }
+
+  setField(k, type) {
+    return (e) => {
+      const v = type === 'check' ? e.target.checked : e.target.value;
+      this.setState(s => ({ f: Object.assign({}, s.f, { [k]: v }), regError: '' }));
+    };
+  }
+
+  onScroll = (e) => {
+    const st = e.target.scrollTop > 176;
+    if (st !== this.state.stuck) this.setState({ stuck: st });
+  };
+
+  register = () => {
+    const f = this.state.f;
+    let err = '';
+    if (!f.nome.trim() || !f.cognome.trim()) err = 'Inserisci nome e cognome.';
+    else if (!/^[+\d][\d\s]{7,}$/.test(f.tel.trim())) err = 'Numero di telefono non valido.';
+    else if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(f.email.trim())) err = 'Email non valida.';
+    else if (f.pw.length < 8) err = 'La password deve avere almeno 8 caratteri.';
+    else if (f.pw !== f.pw2) err = 'Le password non coincidono.';
+    else if (!f.terms) err = 'Devi accettare i Termini e Condizioni.';
+    else if (!f.privacy) err = 'Devi confermare la lettura dell\u2019Informativa privacy.';
+    if (err) return this.setState({ regError: err });
+    this.setState({ screen: 'home', tab: 'home', regError: '' });
+  };
+
+  qrPath() {
+    const n = 29, on = [];
+    const finder = (ox, oy) => {
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
+        const edge = x === 0 || y === 0 || x === 6 || y === 6;
+        const core = x > 1 && x < 5 && y > 1 && y < 5;
+        if (edge || core) on.push([ox + x, oy + y]);
+      }
+    };
+    finder(0, 0); finder(22, 0); finder(0, 22);
+    const inFinder = (x, y) => (x < 8 && y < 8) || (x > 20 && y < 8) || (x < 8 && y > 20);
+    let seed = 20260731;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      if (inFinder(x, y)) continue;
+      if (rnd() > 0.52) on.push([x, y]);
+    }
+    return on.map(p => 'M' + p[0] + ' ' + p[1] + 'h1v1h-1z').join('');
+  }
+
+  chipStyle(on) {
+    return {
+      all: 'unset', cursor: 'pointer', fontSize: 13, padding: '7px 12px', minHeight: 32,
+      border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-divider)'),
+      borderRadius: 'var(--radius-md)',
+      background: on ? 'var(--color-accent-100)' : 'transparent',
+      color: on ? 'var(--color-accent-800)' : 'var(--color-text)'
+    };
+  }
+
+  renderVals() {
+    const s = this.state, sc = s.screen;
+    const locali = this.data().map(l => this.decorate(l));
+    const sel = locali.find(l => l.id === s.selected) || locali[0];
+    const tabDefs = [
+      { id: 'home', label: 'Home', icon: 'ph-duotone ph-house' },
+      { id: 'campagne', label: 'Timbri', icon: 'ph-duotone ph-stamp' },
+      { id: 'carta', label: 'Carta', icon: 'ph-duotone ph-identification-card' },
+      { id: 'punti', label: 'Punti', icon: 'ph-duotone ph-coins' },
+      { id: 'profilo', label: 'Profilo', icon: 'ph-duotone ph-user-circle' }
+    ];
+    const tabs = tabDefs.map(t => {
+      const active = s.tab === t.id && sc !== 'map';
+      const center = t.id === 'carta';
+      return {
+        label: t.label, icon: t.icon,
+        go: () => this.setState({ tab: t.id, screen: t.id, stuck: false }),
+        btnStyle: {
+          all: 'unset', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 4, minHeight: 46, justifyContent: 'flex-start'
+        },
+        iconStyle: center
+          ? {
+              fontSize: 23, width: 52, height: 52, marginTop: -27, marginBottom: -2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+              background: 'var(--color-bg)',
+              color: active ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+              border: '1px solid var(--color-text)', borderRadius: '50%',
+              boxShadow: 'var(--shadow-md)'
+            }
+          : { fontSize: 23, lineHeight: 1, height: 23, color: active ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)' },
+        labelStyle: {
+          fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 10.5, letterSpacing: '.04em',
+          color: active ? 'var(--color-text)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)'
+        }
+      };
+    });
+    const pins = locali.map(l => ({
+      select: () => this.setState({ selected: l.id }),
+      style: {
+        all: 'unset', cursor: 'pointer', position: 'absolute',
+        left: l.x + '%', top: l.y + '%', transform: 'translate(-50%,-100%)',
+        padding: 6, minWidth: 44, minHeight: 44, display: 'grid', placeItems: 'center'
+      },
+      iconStyle: {
+        fontSize: s.selected === l.id ? 44 : 30,
+        color: s.selected === l.id ? 'var(--color-accent-2)' : 'var(--color-accent-700)',
+        filter: s.selected === l.id ? 'drop-shadow(0 2px 4px rgba(0,0,0,.25))' : 'none'
+      }
+    }));
+
+    return {
+      isAuth: sc === 'login' || sc === 'register',
+      isLogin: sc === 'login', isRegister: sc === 'register',
+      isHome: sc === 'home', isMap: sc === 'map', isStub: sc === 'stub', isProfile: sc === 'profilo', isCarta: sc === 'carta', isLocale: sc === 'locale', isCampagne: sc === 'campagne', isPunti: sc === 'punti', isMissioni: sc === 'missioni',
+      openMissioni: () => this.setState({ screen: 'missioni' }),
+      backPunti: () => this.setState({ screen: 'punti', tab: 'punti' }),
+      missioni: [
+        { icon: 'ph-duotone ph-stamp', name: 'Ogni timbro raccolto', desc: 'Un timbro in un locale aderente, a ogni visita valida.', pts: 100 },
+        { icon: 'ph-duotone ph-user-plus', name: 'Invita un amico', desc: 'Si registra con il tuo codice invito e i punti arrivano subito.', pts: 50 },
+        { icon: 'ph-duotone ph-storefront', name: 'Invita un locale', desc: 'Segnali un locale che entra in Freesbe: la missione più ricca.', pts: 400 },
+        { icon: 'ph-duotone ph-compass', name: 'Primi 3 timbri in categorie diverse', desc: 'Per esempio ristorante, barbiere e farmacia: bonus una volta per wave.', pts: 450 },
+        { icon: 'ph-duotone ph-cake', name: 'Il giorno del tuo compleanno', desc: 'Accreditati in automatico sulla data indicata nel profilo.', pts: 50 }
+      ],
+      showTabs: sc !== 'login' && sc !== 'register' && sc !== 'map',
+      campActive: locali.filter(l => l.hasProgress).map(l => Object.assign({}, l, { campSlot: 'camp-' + l.id })),
+      activeCount: locali.filter(l => l.hasProgress).length,
+      campEnded: [
+        { name: 'Pasticceria Rosa', slot: 'camp-rosa', ph: 'Copertina Pasticceria Rosa', kind: 'Pasticceria', endedOn: 'Chiusa il 30 giugno',
+          progressLabel: '8 di 8 timbri', outcome: 'Premio riscattato',
+          fill: { height: '100%', width: '100%', background: 'color-mix(in srgb, var(--color-text) 45%, transparent)' } },
+        { name: 'Trattoria del Ponte', slot: 'camp-ponte', ph: 'Copertina Trattoria del Ponte', kind: 'Cucina', endedOn: 'Chiusa il 31 marzo',
+          progressLabel: '3 di 6 timbri', outcome: 'Raccolta non completata',
+          fill: { height: '100%', width: '50%', background: 'color-mix(in srgb, var(--color-text) 28%, transparent)' } }
+      ],
+      det: locali.find(l => l.id === s.detailId) || locali[0],
+      hoursOpen: !!s.hoursOpen,
+      chevron: s.hoursOpen ? 'ph-duotone ph-caret-up' : 'ph-duotone ph-caret-down',
+      toggleHours: () => this.setState(st => ({ hoursOpen: !st.hoursOpen })),
+      backHome: () => this.setState({ screen: 'home', tab: 'home' }),
+      filtersOpen: !!s.filtersOpen,
+      filters: { openNow: !!s.fOpenNow, mine: !!s.fMine },
+      toggleFilters: () => this.setState(st => ({ filtersOpen: !st.filtersOpen })),
+      filterModal: !!s.filterModal,
+      openFilterModal: () => this.setState({ filterModal: true }),
+      goPunti: () => this.setState({ screen: 'punti', tab: 'punti', stuck: false }),
+      closeFilterModal: () => this.setState({ filterModal: false }),
+      stop: e => e.stopPropagation(),
+      filterBtnStyle: {
+        width: 46, height: 46, flex: 'none', borderRadius: 'var(--radius-md)',
+        border: '1px solid ' + (s.filtersOpen || s.fCat || s.fDist || s.fOpenNow || s.fMine ? 'var(--color-accent)' : 'var(--color-divider)'),
+        background: s.filtersOpen ? 'var(--color-accent-100)' : 'var(--color-surface)',
+        color: s.filtersOpen || s.fCat || s.fDist || s.fOpenNow || s.fMine ? 'var(--color-accent-700)' : 'var(--color-text)'
+      },
+      filterCats: ['Caffetteria', 'Cucina', 'Forno', 'Cocktail'].map(c => ({
+        label: c, pick: () => this.setState(st => ({ fCat: st.fCat === c ? '' : c })),
+        style: this.chipStyle(s.fCat === c)
+      })),
+      filterDist: ['500 m', '1 km', '3 km'].map(d => ({
+        label: d, pick: () => this.setState(st => ({ fDist: st.fDist === d ? '' : d })),
+        style: this.chipStyle(s.fDist === d)
+      })),
+      setFilter: {
+        openNow: e => this.setState({ fOpenNow: e.target.checked }),
+        mine: e => this.setState({ fMine: e.target.checked })
+      },
+      resetFilters: () => this.setState({ fCat: '', fDist: '', fOpenNow: false, fMine: false }),
+      resultCount: locali.filter(l => (!s.fCat || l.kind === s.fCat) && (!s.fOpenNow || l.open) && (!s.fMine || l.hasProgress)).length,
+      inviteCode: 'FRSB-0413',
+      copyLabel: s.copied ? 'Copiato' : 'Copia',
+      copyIcon: s.copied ? 'ph-duotone ph-check' : 'ph-duotone ph-copy',
+      copyInvite: () => {
+        if (navigator.clipboard) navigator.clipboard.writeText('FRSB-0413').catch(() => {});
+        this.setState({ copied: true });
+        clearTimeout(this._ct);
+        this._ct = setTimeout(() => this.setState({ copied: false }), 1800);
+      },
+      qrPath: this.qrPath(),
+      user: {
+        nome: (s.f.nome.trim() || s.f.cognome.trim()) ? (s.f.nome.trim() + ' ' + s.f.cognome.trim()).trim() : 'Mario Rossi',
+        email: s.f.email.trim() || 'mario.rossi@email.it',
+        tel: s.f.tel.trim() || '+39 348 771 2094',
+        since: 'marzo 2024'
+      },
+      doLogout: () => this.setState({ screen: 'login', tab: 'home', stuck: false }),
+      authTitle: sc === 'login' ? 'Freesbe' : 'Diventa socio',
+      authSub: sc === 'login'
+        ? 'Una sola tessera per tutti i locali del quartiere. Accumula punti a ogni visita.'
+        : 'Inserisci i tuoi dati e inizia subito.',
+      f: s.f, q: s.f.q, regError: s.regError, stuck: s.stuck,
+      set: {
+        email: this.setField('email'), pw: this.setField('pw'), pw2: this.setField('pw2'),
+        nome: this.setField('nome'), cognome: this.setField('cognome'), tel: this.setField('tel'),
+        q: this.setField('q'), invito: this.setField('invito'), terms: this.setField('terms', 'check'), privacy: this.setField('privacy', 'check')
+      },
+      goRegister: () => this.setState({ screen: 'register', regError: '' }),
+      goLogin: () => this.setState({ screen: 'login', regError: '' }),
+      doLogin: () => this.setState({ screen: 'home', tab: 'home', stuck: false }),
+      doRegister: this.register,
+      openMap: () => this.setState({ screen: 'map' }),
+      closeMap: () => this.setState({ screen: 'home' }),
+      onScroll: this.onScroll,
+      noop: (e) => e.preventDefault(),
+      points: '1.240', status: 'Oro', today: '31 luglio',
+      waveEnd: '30 settembre', waveDays: 61,
+      waveFill: { height: '100%', width: '52%', background: 'var(--color-text)' },
+      locali: locali.filter(l => (!s.fCat || l.kind === s.fCat) && (!s.fOpenNow || l.open) && (!s.fMine || l.hasProgress)),
+      sel, tabs, pins,
+      stubTitle: s.tab === 'campagne' ? 'Campagne' : s.tab === 'carta' ? 'La tua carta' : s.tab === 'punti' ? 'I tuoi punti' : 'Profilo'
+    };
+  }
+}
+</script>
+</body>
+</html>
