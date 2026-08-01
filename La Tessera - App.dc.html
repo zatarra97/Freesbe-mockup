@@ -36,18 +36,21 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
   image-slot{pointer-events:none}
 }
 
-/* Le testate delle schermate sono staccate dall'alto per lasciar respirare la
-   status bar finta della scocca. Senza scocca quello spazio e' di troppo:
-   .scr-head lo recupera in un colpo solo, mantenendo le distanze relative. */
-.scr-head{margin-top:var(--top-offset,0px)}
-
 /* Telefono vero: niente scocca, l'app occupa tutta la finestra.
    Stessa soglia usata da IOSDevice in ios-frame.jsx — se cambi una, cambia l'altra. */
 @media (max-width:700px){
   body{background:var(--color-bg)}
   .stage{display:block;min-height:100dvh;padding:0}
-  .stage{--top-offset:-12px}
   .rule-top{display:none}   /* filetto Broadsheet in cima a login e registrazione */
+
+  /* Le testate stanno staccate dall'alto per lasciar respirare la status bar
+     finta della scocca. Senza scocca quello spazio e' di troppo: qui lo
+     riportiamo a misura di telefono. !important perche' i valori di partenza
+     sono style inline. */
+  .scr-head{padding-top:39px !important}        /* testate di schermata, da 58/52px */
+  .scr-head-wide{padding-top:45px !important}   /* profilo, da 82px */
+  .scr-bar{padding-top:11px !important}         /* barra filtri fissa: pari al suo bordo inferiore */
+  .scr-top{margin-top:-19px}                    /* elementi ancorati con top:52px, senza padding su cui agire */
 }
 </style>
 
@@ -253,7 +256,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 </div>
 
 <sc-if value="{{ stuck }}" hint-placeholder-val="{{ false }}">
-<div class="scr-head" style="position:absolute;top:0;left:0;right:0;z-index:40;background:var(--color-bg);padding:52px 22px 11px;border-bottom:1px solid var(--color-text);animation:riseIn .18s ease-out">
+<div class="scr-bar" style="position:absolute;top:0;left:0;right:0;z-index:40;background:var(--color-bg);padding:52px 22px 11px;border-bottom:1px solid var(--color-text);animation:riseIn .18s ease-out">
   <div style="display:flex;align-items:center;gap:9px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:0 12px;min-height:44px">
     <i class="ph-duotone ph-magnifying-glass" style="font-size:18px;color:var(--color-accent-700)"></i>
     <input name="ricerca" aria-label="Cerca un locale, una via, una zona" class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
@@ -531,7 +534,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     <image-slot id="{{ det.slot }}" shape="rect" placeholder="{{ det.ph }}"></image-slot>
   </figure>
 
-  <button class="scr-head btn btn-icon" onClick="{{ backHome }}" style="position:absolute;top:52px;left:18px;width:44px;height:44px;background:var(--color-bg);border:1px solid var(--color-text);z-index:10">
+  <button class="scr-top btn btn-icon" onClick="{{ backHome }}" style="position:absolute;top:52px;left:18px;width:44px;height:44px;background:var(--color-bg);border:1px solid var(--color-text);z-index:10">
     <i class="ph-duotone ph-arrow-left" style="font-size:19px"></i>
   </button>
 
@@ -707,7 +710,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 
 <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
 <div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
-  <section class="scr-head" style="padding: 82px 22px 0">
+  <section class="scr-head-wide" style="padding: 82px 22px 0">
     <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
       
     </div><div style="display: flex; align-items: flex-end; gap: 16px; margin-top: 18px">
@@ -819,7 +822,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     </button>
   </sc-for>
 
-  <div class="scr-head" style="position:absolute;top:52px;left:18px;right:18px;display:flex;gap:9px;align-items:center">
+  <div class="scr-top" style="position:absolute;top:52px;left:18px;right:18px;display:flex;gap:9px;align-items:center">
     <button class="btn btn-icon" onClick="{{ closeMap }}" style="background:var(--color-bg);border:1px solid var(--color-text);width:44px;height:44px;flex:none">
       <i class="ph-duotone ph-arrow-left" style="font-size:19px"></i>
     </button>
