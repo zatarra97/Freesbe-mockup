@@ -47,10 +47,14 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
      finta della scocca. Senza scocca quello spazio e' di troppo: qui lo
      riportiamo a misura di telefono. !important perche' i valori di partenza
      sono style inline. */
-  .scr-head{padding-top:39px !important}        /* testate di schermata, da 58/52px */
-  .scr-head-wide{padding-top:45px !important}   /* profilo, da 82px */
+  /* Home e Punti hanno una testata flex alta 218px fissi con space-between e
+     un primo figlio vuoto: lo spazio avanzato veniva ridistribuito e il testo
+     partiva comunque da 58px, qualunque padding mettessimo. Senza altezza
+     imposta i blocchi tornano attaccati al padding e alle loro distanze. */
+  .scr-head{padding-top:24px !important;min-height:0 !important}   /* testate di schermata, da 58/52px */
+  .scr-head-wide{padding-top:30px !important}   /* profilo, da 82px */
   .scr-bar{padding-top:11px !important}         /* barra filtri fissa: pari al suo bordo inferiore */
-  .scr-top{margin-top:-19px}                    /* elementi ancorati con top:52px, senza padding su cui agire */
+  .scr-top{margin-top:-28px}                    /* elementi ancorati con top:52px: li porta ai 24px delle testate */
 }
 </style>
 
