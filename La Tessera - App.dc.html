@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Freesbe — mockup app soci</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230088b0'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='21' font-weight='600' fill='%23fff' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
 <!-- offline-boot.js serve solo al doppio clic (file://), dove il browser blocca
      fetch() sui file locali: pesa ~380 KB, quindi online non va nemmeno scaricato.
      document.write tiene il caricamento sincrono, prima di support.js. -->
@@ -85,12 +87,12 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
         <label class="radio" style="align-items:flex-start;font-size:12.5px;line-height:1.45;min-height:44px">
-          <input type="checkbox" checked="{{ f.terms }}" onChange="{{ set.terms }}">
+          <input name="terms" aria-label="Accetto i Termini e Condizioni" type="checkbox" checked="{{ f.terms }}" onChange="{{ set.terms }}">
           <span class="dot" style="border-radius:var(--radius-md);width:20px;height:20px;margin-top:2px"></span>
           <span>Ho preso visione dei <a href="#" onClick="{{ noop }}">Termini e Condizioni</a></span>
         </label>
         <label class="radio" style="align-items:flex-start;font-size:12.5px;line-height:1.45;min-height:44px">
-          <input type="checkbox" checked="{{ f.privacy }}" onChange="{{ set.privacy }}">
+          <input name="privacy" aria-label="Ho letto l’Informativa privacy" type="checkbox" checked="{{ f.privacy }}" onChange="{{ set.privacy }}">
           <span class="dot" style="border-radius:var(--radius-md);width:20px;height:20px;margin-top:2px"></span>
           <span>Ho letto l'<a href="#" onClick="{{ noop }}">Informativa privacy</a></span>
         </label>
@@ -137,7 +139,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     <div style="display:flex;align-items:center;gap:9px">
       <div style="flex:1;display:flex;align-items:center;gap:9px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:0 12px;min-height:46px">
         <i class="ph-duotone ph-magnifying-glass" style="font-size:18px;color:var(--color-accent-700)"></i>
-        <input class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:44px">
+        <input name="ricerca" aria-label="Cerca un locale, una via, una zona" class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:44px">
       </div>
       <button class="btn btn-icon" onClick="{{ toggleFilters }}" style="{{ filterBtnStyle }}">
         <i class="ph-duotone ph-sliders-horizontal" style="font-size:19px"></i>
@@ -159,12 +161,12 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;margin-top:14px">
           <label class="radio" style="min-height:44px">
-            <input type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
+            <input name="filtro-aperti" aria-label="Solo locali aperti ora" type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
             <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
             <span style="font-size:13.5px">Aperti ora</span>
           </label>
           <label class="radio" style="min-height:44px">
-            <input type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
+            <input name="filtro-raccolte" aria-label="Solo locali con una raccolta attiva" type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
             <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
             <span style="font-size:13.5px">Solo dove sto raccogliendo</span>
           </label>
@@ -238,7 +240,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 <div style="position:absolute;top:0;left:0;right:0;z-index:40;background:var(--color-bg);padding:52px 22px 11px;border-bottom:1px solid var(--color-text);animation:riseIn .18s ease-out">
   <div style="display:flex;align-items:center;gap:9px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:0 12px;min-height:44px">
     <i class="ph-duotone ph-magnifying-glass" style="font-size:18px;color:var(--color-accent-700)"></i>
-    <input class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
+    <input name="ricerca" aria-label="Cerca un locale, una via, una zona" class="input" placeholder="Cerca un locale, una via, una zona" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
     <button onClick="{{ openFilterModal }}" style="all:unset;cursor:pointer;display:grid;place-items:center;width:36px;height:36px;flex:none">
       <i class="ph-duotone ph-sliders-horizontal" style="font-size:19px;color:var(--color-accent-700)"></i>
     </button>
@@ -270,12 +272,12 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-top:12px">
         <label class="radio" style="min-height:44px">
-          <input type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
+          <input name="filtro-aperti" aria-label="Solo locali aperti ora" type="checkbox" checked="{{ filters.openNow }}" onChange="{{ setFilter.openNow }}">
           <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
           <span style="font-size:13.5px">Aperti ora</span>
         </label>
         <label class="radio" style="min-height:44px">
-          <input type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
+          <input name="filtro-raccolte" aria-label="Solo locali con una raccolta attiva" type="checkbox" checked="{{ filters.mine }}" onChange="{{ setFilter.mine }}">
           <span class="dot" style="border-radius:var(--radius-md);width:18px;height:18px"></span>
           <span style="font-size:13.5px">Solo dove sto raccogliendo</span>
         </label>
@@ -647,10 +649,10 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 
       <div style="padding:22px 18px 18px;display:flex;justify-content:center">
         <div style="padding:14px;background:#fff;border:1px solid var(--color-divider)">
-          <svg viewBox="0 0 29 29" shape-rendering="crispEdges" style="width:190px;height:190px;display:block">
-            <rect width="29" height="29" fill="#fff"></rect>
-            <path d="{{ qrPath }}" fill="#201e1d"></path>
-          </svg>
+          <!-- QR come background-image e non come <svg><path d="…">: il browser
+               valida l'attributo d mentre parsa il template grezzo, e con dentro
+               il segnaposto {{ }} logherebbe un errore a ogni caricamento. -->
+          <div role="img" aria-label="Codice QR della tessera" style="{{ qrStyle }}"></div>
         </div>
       </div><div style="padding:0 18px 18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
         <div>
@@ -807,7 +809,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     </button>
     <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--color-bg);border:1px solid var(--color-text);padding:0 12px;min-height:44px">
       <i class="ph-duotone ph-magnifying-glass" style="font-size:17px;color:var(--color-accent-700)"></i>
-      <input class="input" placeholder="Cerca in mappa" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
+      <input name="ricerca-mappa" aria-label="Cerca in mappa" class="input" placeholder="Cerca in mappa" value="{{ q }}" onChange="{{ set.q }}" style="border:0;background:transparent;padding:0;min-height:42px">
     </div>
   </div>
 
@@ -982,6 +984,20 @@ class Component extends DCLogic {
     return on.map(p => 'M' + p[0] + ' ' + p[1] + 'h1v1h-1z').join('');
   }
 
+  // Il QR viaggia come data-URI dentro background-image: vedi il commento
+  // accanto al riquadro nella schermata Carta.
+  qrStyle() {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges">'
+      + '<rect width="29" height="29" fill="#fff"/>'
+      + '<path d="' + this.qrPath() + '" fill="#201e1d"/>'
+      + '</svg>';
+    return {
+      width: 190, height: 190, display: 'block',
+      backgroundImage: 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")',
+      backgroundSize: '100% 100%',
+    };
+  }
+
   chipStyle(on) {
     return {
       all: 'unset', cursor: 'pointer', fontSize: 13, padding: '7px 12px', minHeight: 32,
@@ -1109,7 +1125,7 @@ class Component extends DCLogic {
         clearTimeout(this._ct);
         this._ct = setTimeout(() => this.setState({ copied: false }), 1800);
       },
-      qrPath: this.qrPath(),
+      qrStyle: this.qrStyle(),
       user: {
         nome: (s.f.nome.trim() || s.f.cognome.trim()) ? (s.f.nome.trim() + ' ' + s.f.cognome.trim()).trim() : 'Mario Rossi',
         email: s.f.email.trim() || 'mario.rossi@email.it',
