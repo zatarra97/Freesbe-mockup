@@ -27,6 +27,15 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 .stage{min-height:100vh;box-sizing:border-box;display:flex;align-items:center;
   justify-content:center;padding:48px 32px;font-family:var(--font-body)}
 
+/* <image-slot> mette touch-action:none sulla foto per poterla trascinare e
+   ridimensionare: col dito sopra una card, quindi, la pagina non scrolla.
+   Il riposizionamento serve solo mentre si lavora col mouse in Claude Design,
+   quindi sui dispositivi touch rendiamo lo slot trasparente al puntatore —
+   il tocco arriva alla card, che resta cliccabile, e lo scroll torna. */
+@media (pointer:coarse){
+  image-slot{pointer-events:none}
+}
+
 /* Le testate delle schermate sono staccate dall'alto per lasciar respirare la
    status bar finta della scocca. Senza scocca quello spazio e' di troppo:
    .scr-head lo recupera in un colpo solo, mantenendo le distanze relative. */
@@ -330,7 +339,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 
 <sc-if value="{{ isPunti }}" hint-placeholder-val="{{ false }}">
 <div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
-  <section class="scr-head" style="padding: 58px 22px 20px; min-height: 218px; display: flex; flex-direction: column; justify-content: space-between; width: 401px; height: 175px">
+  <section class="scr-head" style="padding: 58px 22px 20px; min-height: 218px; display: flex; flex-direction: column; justify-content: space-between">
     
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px">
       <div>
@@ -354,7 +363,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     </div>
   </section>
 
-  <section style="padding: 18px 22px 0; width: 401px; height: 67px">
+  <section style="padding: 18px 22px 0">
     <div style="border:1px solid var(--color-divider);padding:9px 10px 9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div>
         <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">Il tuo codice invito</div>
@@ -647,7 +656,7 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
     <div style="border:1px solid var(--color-text);background:var(--color-bg);box-shadow:var(--shadow-sm)">
       <div style="padding:16px 18px 0">
         
-        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; width: 323px; height: 54px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0">
           <span style="font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:.02em">Freesbe</span>
           
         </div>
@@ -698,10 +707,10 @@ a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
 
 <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
 <div class="scr" style="position:absolute;inset:0;overflow-y:auto;background:var(--color-bg)">
-  <section class="scr-head" style="padding: 82px 22px 0; width: 414px; height: 155px">
+  <section class="scr-head" style="padding: 82px 22px 0">
     <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 50%,transparent)">
       
-    </div><div style="display: flex; align-items: flex-end; gap: 16px; margin-top: 18px; width: 372px; height: 50px">
+    </div><div style="display: flex; align-items: flex-end; gap: 16px; margin-top: 18px">
       <figure class="halftone" style="width:96px;height:96px;flex:none;position:relative;border-radius:50%;overflow:hidden">
         <image-slot id="avatar-socio" shape="circle" placeholder="Foto"></image-slot>
       </figure>
