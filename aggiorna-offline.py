@@ -2,7 +2,7 @@
 
 Perche' serve: quando il .dc.html viene aperto con doppio clic (protocollo
 file://) Chrome blocca ogni fetch() verso file locali. Il runtime di Claude
-Design usa fetch() per tre cose:
+Design usa fetch() per tre cose: 
 
   1. la propria pagina (refresh live in fase di editing)   -> inutile in locale
   2. ./ios-frame.jsx  (il componente della scocca iPhone)  -> senza, niente frame
