@@ -4,6 +4,25 @@ Mockup interattivo dell'app soci Freesbe (raccolta timbri nei locali aderenti),
 realizzato con Claude Design. Non è codice di produzione: è un prototipo
 navigabile che serve a discutere flussi e interfaccia.
 
+## Stato (settembre 2026)
+
+Questo mockup è il **design di riferimento** dell'app consumer vera, che sta
+nella cartella sorella `FrisbeeApp` (repo `zatarra97/frisbee-APP`, Expo). Nel
+portarlo in app sono state prese tre decisioni che qui non compaiono:
+
+- il brand è **Frisbee**, non «Freesbe»; il lessico **timbri** resta;
+- **niente Login e Registrazione**: l'app è tutta pubblica, parte dalla Home;
+- Home, Mappa e Dettaglio locale mostrano **locali veri** dal gestionale
+  (`FrisbeeB2B`); Timbri, Carta, Punti, Missioni e Profilo restano con i dati
+  finti di questo mockup finché il backend non avrà l'entità cliente. Sui locali
+  veri non c'è la barra di progresso: al suo posto la raccolta in corso e il
+  primo premio.
+
+I token del design system (`_ds/`) sono stati tradotti in
+`FrisbeeApp/apps/mobile/src/theme/`; le foto degli slot in
+`.image-slots.state.json` sono estratte come WebP in `FrisbeeApp/apps/mobile/assets/mock/`.
+Se qui cambia qualcosa, va riportato là a mano.
+
 ## Guardarlo
 
 - **Online:** pubblicato su GitHub Pages a ogni push su `main`.
